@@ -6,6 +6,7 @@ import co.aospa.sense.camera.listeners.CameraEventListener
 import co.aospa.sense.camera.listeners.CameraListener
 import co.aospa.sense.util.Util
 import java.lang.Exception
+import java.lang.RuntimeException
 
 class OpenCameraCallable(
     private val mCameraId: Int,
@@ -37,13 +38,17 @@ class OpenCameraCallable(
 
     private fun openCamera() {
         val cameraData = cameraData
-        if (Util.IS_DEBUG_LOGGING) Log.d(tag, "open camera $mCameraId")
-        // call() already handles an existing camera and reports open failures.
-        // Do not swallow the exception and report a successful open with null data.
-        cameraData.mCamera = openCamera(mCameraId)
-        cameraData.mCameraId = mCameraId
-        if (Util.IS_DEBUG_LOGGING) Log.d(tag, "open camera success, id: " + cameraData.mCameraId)
-        setErrorCallback(cameraData.mCamera)
+        try {
+            if (Util.IS_DEBUG_LOGGING) Log.d(tag, "open camera $mCameraId")
+            if (cameraData.mCameraId != mCameraId) {
+                cameraData.mCamera = openCamera(mCameraId)
+                cameraData.mCameraId = mCameraId
+            }
+            if (Util.IS_DEBUG_LOGGING) Log.d(tag, "open camera success, id: " + cameraData.mCameraId)
+            setErrorCallback(cameraData.mCamera)
+        } catch (e: RuntimeException) {
+            if (Util.IS_DEBUG_LOGGING) Log.e(tag, "fail to connect Camera", e)
+        }
     }
 
     private fun setErrorCallback(camera: Camera?) {
